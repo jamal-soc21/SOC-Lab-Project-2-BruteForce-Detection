@@ -56,14 +56,25 @@ The correlation rule successfully triggered a **Level 10 critical alert** with p
 - `rule.mitre.technique: Brute Force`
 - `previous_output`: Shows the preceding failed login events that were correlated
 
+### Investigation Analysis
+| Field | Value | Significance |
+|-------|-------|-------------|
+| Event ID | 4625 | Failed logon attempt |
+| Logon Type | 2 | Interactive (local), not network |
+| Sub Status | 0xC000006A | Wrong password (not unknown user) |
+| Source IP | ::1 | Localhost — confirms local simulation |
+| rule.firedtimes | 1 | Correlation triggered once |
+| previous_output | 2 events | Confirms 3 events were correlated |
+
 ### 6. Active Response Configuration
-Configured `ossec.conf` to automatically execute the `firewall-drop` command via Wazuh Agent when Rule ID 100101 triggers, with a 10-minute timeout (600 seconds).
+Configured `ossec.conf` to execute `firewall-drop` (timeout: 600s) when Rule 100101 triggers.
 
-![Active Response Before](04_Active_Response_Before.png)
-
-![Wazuh Manager Restart](05_Wazuh_Manager_Restart.png)
-
-![Active Response Config](06_Active_Response_Config.png)
+> **⚠️ Validation Note:** Active Response was configured but successful execution 
+> was not independently validated. Windows Account Lockout Policy (Error 1909) 
+> intervened after the 3rd failed attempt, halting further logins before the 
+> firewall-drop command could be observed in `active-responses.log`. 
+> Additionally, the local attack vector (::1 loopback) is not a valid target 
+> for IP-level blocking. Network-based validation is planned for Project 3.
 
 ### 7. Defense-in-Depth Validation
 During the simulation, Windows native **Account Lockout Policy** triggered before the SIEM Active Response could execute, resulting in Error 1909: *"The referenced account is currently locked out"*. This demonstrates effective Defense-in-Depth where multiple security layers work in tandem.
@@ -81,6 +92,17 @@ During the simulation, Windows native **Account Lockout Policy** triggered befor
 
 ## 🔗 Related Project
 - [Project 1: Enterprise-Grade SIEM Tuning](https://github.com/jamal-soc21/SOC-Lab-Project-1-Wazuh-Sysmon-Tuning)
+
+## ⚠️ Limitations & Future Validation
+- **Local vs Network:** This simulation used `runas` (Logon Type 2, source ::1). 
+  A network-based Brute Force (Logon Type 3, real source IP) is needed to 
+  validate `firewall-drop` execution.
+- **Rule Grouping:** The current rule lacks `same_source_ip` or `same_field` 
+  grouping. In production, this could correlate events from different users. 
+  Future tuning will add proper grouping.
+- **Negative Testing:** The rule has not been tested against benign login 
+  failures (e.g., a user mistyping their password once). False positive 
+  rate is unknown.
 
 ## 🚀 Next Steps
 - Implement automated email/Slack notifications to the SOC team.
