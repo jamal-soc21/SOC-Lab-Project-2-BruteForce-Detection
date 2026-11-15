@@ -43,6 +43,18 @@ Authored a custom rule in `local_rules.xml` that triggers a **Level 10 alert** w
   </mitre>
 </rule>
 
+### 5. Correlation Rule Triggered (Level 10 Alert)
+After tuning the rule to 3 failed attempts within 60 seconds (to align with Windows Account Lockout Policy), the correlation rule successfully triggered a **Level 10 critical alert** with proper MITRE ATT&CK mapping (T1110 - Brute Force).
+
+![Correlation Triggered](08_Correlation_Triggered.png)
+
+**Key Evidence:**
+- `rule.id: 100101`
+- `rule.level: 10`
+- `rule.frequency: 3`
+- `rule.mitre.technique: Brute Force`
+- `previous_output`: Shows the 2 preceding failed login events that were correlated
+
 5. Active Response Configuration
 Configured ossec.conf to automatically execute the firewall-drop command via Wazuh Agent when Rule ID 100101 triggers, with a 10-minute timeout (600 seconds).
 
